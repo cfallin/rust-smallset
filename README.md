@@ -1,6 +1,8 @@
 `smallset`: a small unordered set
 =================================
 
+[![Build Status](https://travis-ci.org/cfallin/boolean_expression.svg?branch=master)](https://travis-ci.org/cfallin/rust-smallset)
+
 [crates.io](https://crates.io/crates/smallset/)
 
 [Documentation](https://cfallin.github.io/rust-smallset/smallset/)
