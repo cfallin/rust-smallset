@@ -4,8 +4,9 @@
 // Copyright (c) 2016 Chris Fallin <cfallin@c1f.net>. Released under the MIT license.
 //
 
-use std::slice::Iter;
 use std::fmt;
+use std::iter::{FromIterator, IntoIterator};
+use std::slice::Iter;
 
 extern crate smallvec;
 use smallvec::{Array, SmallVec};
@@ -36,17 +37,21 @@ use smallvec::{Array, SmallVec};
 /// assert!(s.contains(&1));
 /// ```
 pub struct SmallSet<A: Array>
-    where A::Item: PartialEq + Eq
+where
+    A::Item: PartialEq + Eq,
 {
     elements: SmallVec<A>,
 }
 
 impl<A: Array> SmallSet<A>
-    where A::Item: PartialEq + Eq
+where
+    A::Item: PartialEq + Eq,
 {
     /// Creates a new, empty `SmallSet`.
     pub fn new() -> SmallSet<A> {
-        SmallSet { elements: SmallVec::new() }
+        SmallSet {
+            elements: SmallVec::new(),
+        }
     }
 
     /// Inserts `elem` into the set if not yet present. Returns `true` if the
@@ -96,18 +101,36 @@ impl<A: Array> SmallSet<A>
 }
 
 impl<A: Array> Clone for SmallSet<A>
-    where A::Item: PartialEq + Eq + Clone
+where
+    A::Item: PartialEq + Eq + Clone,
 {
     fn clone(&self) -> SmallSet<A> {
-        SmallSet { elements: self.elements.clone() }
+        SmallSet {
+            elements: self.elements.clone(),
+        }
     }
 }
 
 impl<A: Array> fmt::Debug for SmallSet<A>
-    where A::Item: PartialEq + Eq + fmt::Debug
+where
+    A::Item: PartialEq + Eq + fmt::Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.elements.fmt(f)
+    }
+}
+
+impl<A: Array> FromIterator<A::Item> for SmallSet<A>
+where
+    A::Item: PartialEq + Eq,
+{
+    fn from_iter<T>(iter: T) -> Self
+    where
+        T: IntoIterator<Item = A::Item>,
+    {
+        SmallSet {
+            elements: SmallVec::from_iter(iter),
+        }
     }
 }
 
@@ -169,5 +192,11 @@ mod test {
         let mut buf = String::new();
         write!(buf, "{:?}", s).unwrap();
         assert!(&buf == "[1, 2]");
+    }
+
+    #[test]
+    fn test_fromiter() {
+        let s: SmallSet<[usize; 4]> = vec![1, 2, 3, 4].into_iter().collect();
+        assert!(s.len() == 4);
     }
 }
