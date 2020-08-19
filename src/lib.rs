@@ -28,7 +28,7 @@ use std::hash::Hash;
 /// Example usage:
 ///
 /// ```
-/// use smallset::SmolSet;
+/// use smolset::SmolSet;
 ///
 /// // `s` and its elements will be completely stack-allocated in this example.
 /// let mut s: SmolSet<[u32; 4]> = SmolSet::new();
