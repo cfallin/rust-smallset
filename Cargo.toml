@@ -1,10 +1,12 @@
 [package]
-name = "smallset"
-version = "0.1.1"
-authors = ["Chris Fallin <cfallin@c1f.net>"]
-description = "An unordered set of elements optimized for small sizes"
-repository = "https://github.com/cfallin/rust-smallset"
-documentation = "https://cfallin.github.io/rust-smallset/smallset/"
+name = "smolset"
+version = "1.0.0"
+authors = ["Chris Fallin <cfallin@c1f.net>", "Hanif Bin Ariffin <hanif.ariffin.4326@gmail.com>"]
+description = """"
+An unordered set of elements optimized for small sizes.
+This is a fork of the original library with overhauled internals, better fallback perforamance (O(1) insert and find) and more features!
+"""
+repository = "https://github.com/hbina/smolset"
 license = "MIT"
 
 [dependencies]

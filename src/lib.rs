@@ -13,14 +13,14 @@ use smallvec::{Array, SmallVec};
 use std::collections::HashSet;
 use std::hash::Hash;
 
-/// A `SmallSet` is an unordered set of elements. It is designed to work best
+/// A `SmolSet` is an unordered set of elements. It is designed to work best
 /// for very small sets (no more than ten or so elements). In order to support
 /// small sets very efficiently, it stores elements in a simple unordered array.
 /// When the set is smaller than the size of the array `A`, all elements are
 /// stored inline, without heap allocation. This is accomplished by using a
 /// `smallvec::SmallVec`.
 ///
-/// The insert, remove, and query methods on `SmallSet` have `O(n)` time
+/// The insert, remove, and query methods on `SmolSet` have `O(n)` time
 /// complexity in the current set size: they perform a linear scan to determine
 /// if the element in question is present. This is inefficient for large sets,
 /// but fast and cache-friendly for small sets.
@@ -28,35 +28,35 @@ use std::hash::Hash;
 /// Example usage:
 ///
 /// ```
-/// use smallset::SmallSet;
+/// use smallset::SmolSet;
 ///
 /// // `s` and its elements will be completely stack-allocated in this example.
-/// let mut s: SmallSet<[u32; 4]> = SmallSet::new();
+/// let mut s: SmolSet<[u32; 4]> = SmolSet::new();
 /// s.insert(1);
 /// s.insert(2);
 /// s.insert(3);
 /// assert_eq!(s.len(), 3);
 /// assert!(s.contains(&1));
 /// ```
-pub struct SmallSet<A: Array>
+pub struct SmolSet<A: Array>
 where
     A::Item: PartialEq + Eq,
 {
-    inner: InnerSmallVec<A>,
+    inner: InnerSmolSet<A>,
 }
 
-impl<A: Array> Default for SmallSet<A>
+impl<A: Array> Default for SmolSet<A>
 where
     A::Item: PartialEq + Eq + Hash,
 {
     fn default() -> Self {
-        SmallSet::new()
+        SmolSet::new()
     }
 }
 
-/// Internal (and true) representation of the `SmallSet`.
+/// Internal (and true) representation of the `SmolSet`.
 /// Created so that user are not aware of the sum type.
-pub enum InnerSmallVec<A: Array>
+pub enum InnerSmolSet<A: Array>
 where
     A::Item: PartialEq + Eq,
 {
@@ -64,28 +64,28 @@ where
     Heap(std::collections::HashSet<A::Item>),
 }
 
-impl<A: Array> Default for InnerSmallVec<A>
+impl<A: Array> Default for InnerSmolSet<A>
 where
     A::Item: PartialEq + Eq,
 {
     fn default() -> Self {
-        InnerSmallVec::Stack(SmallVec::new())
+        InnerSmolSet::Stack(SmallVec::new())
     }
 }
 
-impl<A: Array> Clone for InnerSmallVec<A>
+impl<A: Array> Clone for InnerSmolSet<A>
 where
     A::Item: PartialEq + Eq + Clone,
 {
     fn clone(&self) -> Self {
         match &self {
-            InnerSmallVec::Stack(elements) => InnerSmallVec::Stack(elements.clone()),
-            InnerSmallVec::Heap(elements) => InnerSmallVec::Heap(elements.clone()),
+            InnerSmolSet::Stack(elements) => InnerSmolSet::Stack(elements.clone()),
+            InnerSmolSet::Heap(elements) => InnerSmolSet::Heap(elements.clone()),
         }
     }
 }
 
-impl<A: Array> PartialEq for SmallSet<A>
+impl<A: Array> PartialEq for SmolSet<A>
 where
     A::Item: Eq + PartialEq + Hash,
 {
@@ -98,22 +98,22 @@ where
         }
 
         match (&self.inner, &other.inner) {
-            (InnerSmallVec::Stack(lhs), InnerSmallVec::Stack(rhs)) => lhs.eq(rhs),
-            (InnerSmallVec::Heap(lhs), InnerSmallVec::Heap(rhs)) => lhs.eq(rhs),
-            (InnerSmallVec::Stack(stack), InnerSmallVec::Heap(heap)) => set_same(stack, heap),
-            (InnerSmallVec::Heap(heap), InnerSmallVec::Stack(stack)) => set_same(stack, heap),
+            (InnerSmolSet::Stack(lhs), InnerSmolSet::Stack(rhs)) => lhs.eq(rhs),
+            (InnerSmolSet::Heap(lhs), InnerSmolSet::Heap(rhs)) => lhs.eq(rhs),
+            (InnerSmolSet::Stack(stack), InnerSmolSet::Heap(heap)) => set_same(stack, heap),
+            (InnerSmolSet::Heap(heap), InnerSmolSet::Stack(stack)) => set_same(stack, heap),
         }
     }
 }
 
-impl<A: Array> SmallSet<A>
+impl<A: Array> SmolSet<A>
 where
     A::Item: PartialEq + Eq + Hash,
 {
-    /// Creates a new, empty `SmallSet`.
-    pub fn new() -> SmallSet<A> {
-        SmallSet {
-            inner: InnerSmallVec::Stack(SmallVec::new()),
+    /// Creates a new, empty `SmolSet`.
+    pub fn new() -> SmolSet<A> {
+        SmolSet {
+            inner: InnerSmolSet::Stack(SmallVec::new()),
         }
     }
 
@@ -127,7 +127,7 @@ where
     /// element present.
     pub fn insert(&mut self, elem: A::Item) -> bool {
         match &mut self.inner {
-            InnerSmallVec::Stack(ref mut elements) => {
+            InnerSmolSet::Stack(ref mut elements) => {
                 if elements.contains(&elem) {
                     false
                 } else {
@@ -139,12 +139,12 @@ where
                             ee.insert(elements.remove(0));
                         }
                         ee.insert(elem);
-                        self.inner = InnerSmallVec::Heap(ee);
+                        self.inner = InnerSmolSet::Heap(ee);
                     }
                     true
                 }
             }
-            InnerSmallVec::Heap(ref mut elements) => elements.insert(elem),
+            InnerSmolSet::Heap(ref mut elements) => elements.insert(elem),
         }
     }
 
@@ -152,7 +152,7 @@ where
     /// or `false` if it was not found.
     pub fn remove(&mut self, elem: &A::Item) -> bool {
         match &mut self.inner {
-            InnerSmallVec::Stack(ref mut elements) => {
+            InnerSmolSet::Stack(ref mut elements) => {
                 if let Some(pos) = elements.iter().position(|e| *e == *elem) {
                     elements.remove(pos);
                     true
@@ -160,7 +160,7 @@ where
                     false
                 }
             }
-            InnerSmallVec::Heap(ref mut elements) => elements.remove(elem),
+            InnerSmolSet::Heap(ref mut elements) => elements.remove(elem),
         }
     }
 
@@ -168,20 +168,20 @@ where
     /// `false` if not.
     pub fn contains(&self, elem: &A::Item) -> bool {
         match &self.inner {
-            InnerSmallVec::Stack(ref elements) => elements.iter().any(|e| *e == *elem),
-            InnerSmallVec::Heap(ref elements) => elements.contains(elem),
+            InnerSmolSet::Stack(ref elements) => elements.iter().any(|e| *e == *elem),
+            InnerSmolSet::Heap(ref elements) => elements.contains(elem),
         }
     }
 
     /// Returns an iterator over the set elements. Elements will be returned in
     /// an arbitrary (unsorted) order.
-    pub fn iter(&self) -> SmallIter<A> {
+    pub fn iter(&self) -> SmolSetIter<A> {
         match &self.inner {
-            InnerSmallVec::Stack(element) => SmallIter {
-                inner: InnerSmallIter::Stack(element.iter()),
+            InnerSmolSet::Stack(element) => SmolSetIter {
+                inner: InnerSmolSetIter::Stack(element.iter()),
             },
-            InnerSmallVec::Heap(element) => SmallIter {
-                inner: InnerSmallIter::Heap(element.iter()),
+            InnerSmolSet::Heap(element) => SmolSetIter {
+                inner: InnerSmolSetIter::Heap(element.iter()),
             },
         }
     }
@@ -189,16 +189,16 @@ where
     /// Returns the current length of the set.
     pub fn len(&self) -> usize {
         match &self.inner {
-            InnerSmallVec::Stack(elements) => elements.len(),
-            InnerSmallVec::Heap(elements) => elements.len(),
+            InnerSmolSet::Stack(elements) => elements.len(),
+            InnerSmolSet::Heap(elements) => elements.len(),
         }
     }
 
     /// Clears the set.
     pub fn clear(&mut self) {
         match &mut self.inner {
-            InnerSmallVec::Stack(ref mut elements) => elements.clear(),
-            InnerSmallVec::Heap(ref mut elements) => {
+            InnerSmolSet::Stack(ref mut elements) => elements.clear(),
+            InnerSmolSet::Heap(ref mut elements) => {
                 elements.clear();
                 self.inner = Default::default();
             }
@@ -209,8 +209,8 @@ where
     /// Where they are equal (in the case where the set is in stack mode) or they hash equally (if the set is in heap mode).
     pub fn get(&self, elem: &A::Item) -> Option<&A::Item> {
         match &self.inner {
-            InnerSmallVec::Stack(elements) => elements.iter().find(|x| (elem).eq(&x)),
-            InnerSmallVec::Heap(elements) => elements.iter().find(|x| (elem).eq(&x)),
+            InnerSmolSet::Stack(elements) => elements.iter().find(|x| (elem).eq(&x)),
+            InnerSmolSet::Heap(elements) => elements.iter().find(|x| (elem).eq(&x)),
         }
     }
 
@@ -218,7 +218,7 @@ where
     /// Then, remove that value from the set.
     pub fn take(&mut self, value: &A::Item) -> Option<A::Item> {
         match &mut self.inner {
-            InnerSmallVec::Stack(ref mut elements) => {
+            InnerSmolSet::Stack(ref mut elements) => {
                 if let Some(pos) = elements.iter().position(|e| *e == *value) {
                     let result = elements.remove(pos);
                     Some(result)
@@ -226,14 +226,14 @@ where
                     None
                 }
             }
-            InnerSmallVec::Heap(ref mut elements) => elements.take(value),
+            InnerSmolSet::Heap(ref mut elements) => elements.take(value),
         }
     }
 
     /// Adds a value to the set, replacing the existing value, if any, that is equal to the given one. Returns the replaced value.
     pub fn replace(&mut self, value: A::Item) -> Option<A::Item> {
         match &mut self.inner {
-            InnerSmallVec::Stack(ref mut elements) => {
+            InnerSmolSet::Stack(ref mut elements) => {
                 if let Some(pos) = elements.iter().position(|e| *e == value) {
                     let result = elements.remove(pos);
                     elements.insert(pos, value);
@@ -242,14 +242,14 @@ where
                     None
                 }
             }
-            InnerSmallVec::Heap(ref mut elements) => elements.replace(value),
+            InnerSmolSet::Heap(ref mut elements) => elements.replace(value),
         }
     }
 
     /// Empties the set and returns an iterator over it.
     pub fn drain(&mut self) -> SmallDrain<A::Item> {
         match &mut self.inner {
-            InnerSmallVec::Stack(ref mut elements) => {
+            InnerSmolSet::Stack(ref mut elements) => {
                 // TODO: Clean up this garbage...
                 let mut ee = Vec::<A::Item>::with_capacity(elements.len() + 1);
                 while !elements.is_empty() {
@@ -257,7 +257,7 @@ where
                 }
                 SmallDrain { data: ee, index: 0 }
             }
-            InnerSmallVec::Heap(ref mut elements) => {
+            InnerSmolSet::Heap(ref mut elements) => {
                 let drain = elements.drain().collect::<Vec<A::Item>>();
                 SmallDrain {
                     data: drain,
@@ -273,15 +273,15 @@ where
         F: FnMut(&mut A::Item) -> bool + for<'r> FnMut(&'r <A as smallvec::Array>::Item) -> bool,
     {
         match &mut self.inner {
-            InnerSmallVec::Stack(ref mut elements) => elements.retain(f),
-            InnerSmallVec::Heap(ref mut elements) => elements.retain(f),
+            InnerSmolSet::Stack(ref mut elements) => elements.retain(f),
+            InnerSmolSet::Heap(ref mut elements) => elements.retain(f),
         }
     }
 
     /// Returns an iterator over the intersection of the 2 sets.
     pub fn intersection<'a>(&'a self, other: &'a Self) -> SmallIntersection<'a, A::Item> {
         match &self.inner {
-            InnerSmallVec::Stack(ref elements) => {
+            InnerSmolSet::Stack(ref elements) => {
                 let result = elements
                     .iter()
                     .filter(|x| other.contains(x))
@@ -292,7 +292,7 @@ where
                 }
             }
 
-            InnerSmallVec::Heap(ref elements) => {
+            InnerSmolSet::Heap(ref elements) => {
                 let result = elements
                     .iter()
                     .filter(|x| other.contains(x))
@@ -308,7 +308,7 @@ where
     /// Returns an iterator over the union of the 2 sets.
     pub fn union<'a>(&'a self, other: &'a Self) -> SmallUnion<'a, A::Item> {
         match &self.inner {
-            InnerSmallVec::Stack(ref elements) => {
+            InnerSmolSet::Stack(ref elements) => {
                 let mut lhs = elements.iter().collect::<Vec<&'a A::Item>>();
                 let mut rhs = other
                     .iter()
@@ -321,7 +321,7 @@ where
                 }
             }
 
-            InnerSmallVec::Heap(ref elements) => {
+            InnerSmolSet::Heap(ref elements) => {
                 let mut lhs = elements.iter().collect::<Vec<&'a A::Item>>();
                 let mut rhs = other
                     .iter()
@@ -339,7 +339,7 @@ where
     /// Returns an iterator over the difference of the 2 sets.
     pub fn difference<'a>(&'a self, other: &'a Self) -> SmallDifference<'a, A::Item> {
         match &self.inner {
-            InnerSmallVec::Stack(ref elements) => {
+            InnerSmolSet::Stack(ref elements) => {
                 let lhs = elements
                     .iter()
                     .filter(|x| !other.contains(x))
@@ -350,7 +350,7 @@ where
                 }
             }
 
-            InnerSmallVec::Heap(ref elements) => {
+            InnerSmolSet::Heap(ref elements) => {
                 let lhs = elements
                     .iter()
                     .filter(|x| !other.contains(x))
@@ -369,7 +369,7 @@ where
         other: &'a Self,
     ) -> SmallSymmetricDifference<'a, A::Item> {
         match &self.inner {
-            InnerSmallVec::Stack(ref elements) => {
+            InnerSmolSet::Stack(ref elements) => {
                 let mut lhs = elements
                     .iter()
                     .filter(|x| !other.contains(x))
@@ -385,7 +385,7 @@ where
                 }
             }
 
-            InnerSmallVec::Heap(ref elements) => {
+            InnerSmolSet::Heap(ref elements) => {
                 let mut lhs = elements
                     .iter()
                     .filter(|x| other.contains(x))
@@ -504,30 +504,30 @@ impl<'a, T> Iterator for SmallSymmetricDifference<'a, T> {
     }
 }
 
-impl<A: Array> Clone for SmallSet<A>
+impl<A: Array> Clone for SmolSet<A>
 where
     A::Item: PartialEq + Eq + Clone,
 {
-    fn clone(&self) -> SmallSet<A> {
-        SmallSet {
+    fn clone(&self) -> SmolSet<A> {
+        SmolSet {
             inner: self.inner.clone(),
         }
     }
 }
 
-impl<A: Array> fmt::Debug for SmallSet<A>
+impl<A: Array> fmt::Debug for SmolSet<A>
 where
     A::Item: PartialEq + Eq + fmt::Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match &self.inner {
-            InnerSmallVec::Stack(elements) => write!(f, "{:?}", elements.as_slice()),
-            InnerSmallVec::Heap(elements) => write!(f, "{:?}", elements),
+            InnerSmolSet::Stack(elements) => write!(f, "{:?}", elements.as_slice()),
+            InnerSmolSet::Heap(elements) => write!(f, "{:?}", elements),
         }
     }
 }
 
-impl<A: Array> FromIterator<A::Item> for SmallSet<A>
+impl<A: Array> FromIterator<A::Item> for SmolSet<A>
 where
     A::Item: PartialEq + Eq + Hash,
 {
@@ -535,7 +535,7 @@ where
     where
         T: IntoIterator<Item = A::Item>,
     {
-        iter.into_iter().fold(SmallSet::new(), |mut acc, x| {
+        iter.into_iter().fold(SmolSet::new(), |mut acc, x| {
             acc.insert(x);
             acc
         })
@@ -544,14 +544,14 @@ where
 
 /// Iterator of the set returned upon calling `iter`.
 /// This is required to be an abstraction over the enum.
-pub struct SmallIter<'a, A: Array>
+pub struct SmolSetIter<'a, A: Array>
 where
     A::Item: PartialEq + Eq + Hash + 'a,
 {
-    inner: InnerSmallIter<'a, A>,
+    inner: InnerSmolSetIter<'a, A>,
 }
 
-pub enum InnerSmallIter<'a, A: Array>
+pub enum InnerSmolSetIter<'a, A: Array>
 where
     A::Item: PartialEq + Eq + Hash + 'a,
 {
@@ -559,7 +559,7 @@ where
     Heap(std::collections::hash_set::Iter<'a, A::Item>),
 }
 
-impl<'a, A: Array> Iterator for SmallIter<'a, A>
+impl<'a, A: Array> Iterator for SmolSetIter<'a, A>
 where
     A::Item: PartialEq + Eq + Hash + 'a,
 {
@@ -567,8 +567,8 @@ where
 
     fn next(&mut self) -> Option<Self::Item> {
         match &mut self.inner {
-            InnerSmallIter::Stack(ref mut iter) => iter.next(),
-            InnerSmallIter::Heap(ref mut iter) => iter.next(),
+            InnerSmolSetIter::Stack(ref mut iter) => iter.next(),
+            InnerSmolSetIter::Heap(ref mut iter) => iter.next(),
         }
     }
 }

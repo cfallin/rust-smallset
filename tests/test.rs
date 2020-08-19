@@ -1,12 +1,12 @@
-extern crate smallset;
+extern crate smolset;
 
-use smallset::SmallSet;
+use smolset::SmolSet;
 use std::fmt::Write;
 use std::hash::{Hash, Hasher};
 
 #[test]
 fn test_basic_set() {
-    let mut s: SmallSet<[u32; 2]> = SmallSet::new();
+    let mut s: SmolSet<[u32; 2]> = SmolSet::new();
     assert_eq!(s.insert(1), true);
     assert_eq!(s.insert(2), true);
     assert_eq!(s.insert(2), false);
@@ -30,7 +30,7 @@ fn test_basic_set() {
 
 #[test]
 fn test_remove() {
-    let mut s: SmallSet<[u32; 2]> = SmallSet::new();
+    let mut s: SmolSet<[u32; 2]> = SmolSet::new();
     assert_eq!(s.insert(1), true);
     assert_eq!(s.insert(2), true);
     assert_eq!(s.len(), 2);
@@ -50,7 +50,7 @@ fn test_remove() {
 
 #[test]
 fn test_clone() {
-    let mut s: SmallSet<[u32; 2]> = SmallSet::new();
+    let mut s: SmolSet<[u32; 2]> = SmolSet::new();
     s.insert(1);
     s.insert(2);
     let c = s.clone();
@@ -61,7 +61,7 @@ fn test_clone() {
 
 #[test]
 fn test_debug_small() {
-    let mut s: SmallSet<[u32; 2]> = SmallSet::new();
+    let mut s: SmolSet<[u32; 2]> = SmolSet::new();
     s.insert(1);
     s.insert(2);
     let mut buf = String::new();
@@ -71,7 +71,7 @@ fn test_debug_small() {
 
 #[test]
 fn test_from_iter() {
-    let s: SmallSet<[usize; 4]> = vec![1, 2, 3, 4].into_iter().collect();
+    let s: SmolSet<[usize; 4]> = vec![1, 2, 3, 4].into_iter().collect();
     assert_eq!(s.len(), 4);
 }
 
@@ -105,7 +105,7 @@ fn test_replace() {
 
     impl Eq for RingOf7 {}
 
-    let mut lhs = SmallSet::<[RingOf7; 4]>::new();
+    let mut lhs = SmolSet::<[RingOf7; 4]>::new();
     lhs.insert(RingOf7 { value: 1 });
     lhs.insert(RingOf7 { value: 2 });
     lhs.insert(RingOf7 { value: 3 });
@@ -128,11 +128,11 @@ fn test_replace() {
 
 #[test]
 fn test_eq() {
-    let mut lhs = SmallSet::<[u32; 4]>::new();
+    let mut lhs = SmolSet::<[u32; 4]>::new();
     lhs.insert(1);
     lhs.insert(2);
 
-    let mut rhs = SmallSet::<[u32; 4]>::new();
+    let mut rhs = SmolSet::<[u32; 4]>::new();
     rhs.insert(1);
     rhs.insert(2);
 
@@ -141,7 +141,7 @@ fn test_eq() {
 
 #[test]
 fn test_intersection() {
-    let mut lhs = SmallSet::<[u32; 4]>::new();
+    let mut lhs = SmolSet::<[u32; 4]>::new();
     lhs.insert(1);
     lhs.insert(3);
     lhs.insert(5);
@@ -149,7 +149,7 @@ fn test_intersection() {
     lhs.insert(8);
     lhs.insert(10);
 
-    let mut rhs = SmallSet::<[u32; 4]>::new();
+    let mut rhs = SmolSet::<[u32; 4]>::new();
     rhs.insert(4);
     rhs.insert(8);
     rhs.insert(10);
@@ -159,13 +159,13 @@ fn test_intersection() {
 
 #[test]
 fn test_union() {
-    let mut lhs = SmallSet::<[u32; 4]>::new();
+    let mut lhs = SmolSet::<[u32; 4]>::new();
     lhs.insert(1);
     lhs.insert(2);
     lhs.insert(3);
     lhs.insert(4);
 
-    let mut rhs = SmallSet::<[u32; 4]>::new();
+    let mut rhs = SmolSet::<[u32; 4]>::new();
     rhs.insert(3);
     rhs.insert(4);
     rhs.insert(5);
@@ -183,13 +183,13 @@ fn test_union() {
 
 #[test]
 fn test_difference() {
-    let mut lhs = SmallSet::<[u32; 4]>::new();
+    let mut lhs = SmolSet::<[u32; 4]>::new();
     lhs.insert(1);
     lhs.insert(2);
     lhs.insert(3);
     lhs.insert(4);
 
-    let mut rhs = SmallSet::<[u32; 4]>::new();
+    let mut rhs = SmolSet::<[u32; 4]>::new();
     rhs.insert(3);
     rhs.insert(4);
     rhs.insert(5);
@@ -207,13 +207,13 @@ fn test_difference() {
 
 #[test]
 fn test_symmetric_difference() {
-    let mut lhs = SmallSet::<[u32; 4]>::new();
+    let mut lhs = SmolSet::<[u32; 4]>::new();
     lhs.insert(1);
     lhs.insert(2);
     lhs.insert(3);
     lhs.insert(4);
 
-    let mut rhs = SmallSet::<[u32; 4]>::new();
+    let mut rhs = SmolSet::<[u32; 4]>::new();
     rhs.insert(3);
     rhs.insert(4);
     rhs.insert(5);
