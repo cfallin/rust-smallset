@@ -38,6 +38,9 @@ use std::hash::Hash;
 /// assert_eq!(s.len(), 3);
 /// assert!(s.contains(&1));
 /// ```
+///
+/// TODO: Add the ability to switch modes explicitly.
+///
 pub struct SmolSet<A: Array>
 where
     A::Item: PartialEq + Eq,
@@ -106,6 +109,12 @@ where
     }
 }
 
+#[derive(PartialEq, Debug)]
+pub enum SetMode {
+    Stack,
+    Heap,
+}
+
 impl<A: Array> SmolSet<A>
 where
     A::Item: PartialEq + Eq + Hash,
@@ -114,6 +123,13 @@ where
     pub fn new() -> SmolSet<A> {
         SmolSet {
             inner: InnerSmolSet::Stack(SmallVec::new()),
+        }
+    }
+
+    pub fn mode(&self) -> SetMode {
+        match self.inner {
+            InnerSmolSet::Stack(_) => SetMode::Stack,
+            InnerSmolSet::Heap(_) => SetMode::Heap,
         }
     }
 

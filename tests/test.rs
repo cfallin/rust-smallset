@@ -1,8 +1,9 @@
 extern crate smolset;
 
-use smolset::SmolSet;
+use smolset::{SetMode, SmolSet};
 use std::fmt::Write;
 use std::hash::{Hash, Hasher};
+use std::iter::FromIterator;
 
 #[test]
 fn test_basic_set() {
@@ -17,13 +18,14 @@ fn test_basic_set() {
     assert!(s.contains(&2));
     assert!(s.contains(&3));
     assert!(!s.contains(&4));
-    assert_eq!(s.len(), 3);
+    let expected = vec![1, 2, 3];
+    assert_eq!(s.len(), expected.len());
     assert!(s
         .iter()
         .map(|r| *r)
         .collect::<Vec<u32>>()
         .iter()
-        .all(|x| vec![1, 2, 3].contains(x)));
+        .all(|x| expected.contains(x)));
     s.clear();
     assert!(!s.contains(&1));
 }
@@ -40,12 +42,14 @@ fn test_remove() {
     assert_eq!(s.len(), 1);
     assert!(!s.contains(&1));
     assert_eq!(s.insert(1), true);
+    let expected = vec![1, 2, 3];
+    assert_eq!(s.len(), expected.len());
     assert!(s
         .iter()
         .map(|r| *r)
         .collect::<Vec<u32>>()
         .iter()
-        .all(|x| vec![1, 2, 3].contains(x)));
+        .all(|x| expected.contains(x)));
 }
 
 #[test]
@@ -117,17 +121,17 @@ fn test_replace() {
     lhs.replace(RingOf7 { value: 11 });
 
     let expected = vec![8, 9, 10, 11];
+    assert_eq!(lhs.len(), expected.len());
     assert!(lhs
         .iter()
         .map(|x| x.value)
         .collect::<Vec<u32>>()
         .iter()
-        .zip(expected.iter())
-        .all(|(lhs, rhs)| lhs == rhs));
+        .all(|x| expected.contains(x)));
 }
 
 #[test]
-fn test_eq() {
+fn test_eq_both_stack() {
     let mut lhs = SmolSet::<[u32; 4]>::new();
     lhs.insert(1);
     lhs.insert(2);
@@ -135,6 +139,30 @@ fn test_eq() {
     let mut rhs = SmolSet::<[u32; 4]>::new();
     rhs.insert(1);
     rhs.insert(2);
+
+    assert_eq!(lhs, rhs);
+}
+
+#[test]
+fn test_eq_both_heap() {
+    let expected = (0..100).collect::<Vec<u32>>();
+    let lhs = SmolSet::<[u32; 4]>::from_iter(expected.clone());
+    let rhs = SmolSet::<[u32; 4]>::from_iter(expected.clone());
+
+    assert_eq!(lhs, rhs);
+}
+
+#[test]
+fn test_eq_stack_heap() {
+    let expected = (0..5).collect::<Vec<u32>>();
+    let mut lhs = SmolSet::<[u32; 10]>::from_iter(expected.clone());
+    let rhs = SmolSet::<[u32; 10]>::from_iter(expected.clone());
+
+    (100..200).for_each(|x| assert!(lhs.insert(x)));
+    (100..200).for_each(|x| assert!(lhs.remove(&x)));
+
+    assert_eq!(lhs.mode(), SetMode::Heap);
+    assert_eq!(rhs.mode(), SetMode::Stack);
 
     assert_eq!(lhs, rhs);
 }
