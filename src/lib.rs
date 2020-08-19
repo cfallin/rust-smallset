@@ -38,7 +38,6 @@ use std::hash::Hash;
 /// assert_eq!(s.len(), 3);
 /// assert!(s.contains(&1));
 /// ```
-
 pub struct SmallSet<A: Array>
 where
     A::Item: PartialEq + Eq,
@@ -55,6 +54,8 @@ where
     }
 }
 
+/// Internal (and true) representation of the `SmallSet`.
+/// Created so that user are not aware of the sum type.
 pub enum InnerSmallVec<A: Array>
 where
     A::Item: PartialEq + Eq,
@@ -116,6 +117,7 @@ where
         }
     }
 
+    /// Returns the number of elements in this set.
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
@@ -203,14 +205,17 @@ where
         }
     }
 
-    //
-    pub fn get(&self, value: &A::Item) -> Option<&A::Item> {
+    /// If the given `elem` exists in the set, returns the reference to the value inside the set.
+    /// Where they are equal (in the case where the set is in stack mode) or they hash equally (if the set is in heap mode).
+    pub fn get(&self, elem: &A::Item) -> Option<&A::Item> {
         match &self.inner {
-            InnerSmallVec::Stack(elements) => elements.iter().find(|x| (value).eq(&x)),
-            InnerSmallVec::Heap(elements) => elements.iter().find(|x| (value).eq(&x)),
+            InnerSmallVec::Stack(elements) => elements.iter().find(|x| (elem).eq(&x)),
+            InnerSmallVec::Heap(elements) => elements.iter().find(|x| (elem).eq(&x)),
         }
     }
 
+    /// If the given `elem` exists in the set, returns the value inside the set where they are either equal or hash equally.
+    /// Then, remove that value from the set.
     pub fn take(&mut self, value: &A::Item) -> Option<A::Item> {
         match &mut self.inner {
             InnerSmallVec::Stack(ref mut elements) => {
@@ -225,7 +230,7 @@ where
         }
     }
 
-    // Adds a value to the set, replacing the existing value, if any, that is equal to the given one. Returns the replaced value.
+    /// Adds a value to the set, replacing the existing value, if any, that is equal to the given one. Returns the replaced value.
     pub fn replace(&mut self, value: A::Item) -> Option<A::Item> {
         match &mut self.inner {
             InnerSmallVec::Stack(ref mut elements) => {
@@ -241,6 +246,7 @@ where
         }
     }
 
+    /// Empties the set and returns an iterator over it.
     pub fn drain(&mut self) -> SmallDrain<A::Item> {
         match &mut self.inner {
             InnerSmallVec::Stack(ref mut elements) => {
@@ -261,6 +267,7 @@ where
         }
     }
 
+    /// Removes all elements in the set that does not satisfy the given predicate `f`.
     pub fn retain<F>(&mut self, f: F)
     where
         F: FnMut(&mut A::Item) -> bool + for<'r> FnMut(&'r <A as smallvec::Array>::Item) -> bool,
@@ -271,6 +278,7 @@ where
         }
     }
 
+    /// Returns an iterator over the intersection of the 2 sets.
     pub fn intersection<'a>(&'a self, other: &'a Self) -> SmallIntersection<'a, A::Item> {
         match &self.inner {
             InnerSmallVec::Stack(ref elements) => {
@@ -297,6 +305,7 @@ where
         }
     }
 
+    /// Returns an iterator over the union of the 2 sets.
     pub fn union<'a>(&'a self, other: &'a Self) -> SmallUnion<'a, A::Item> {
         match &self.inner {
             InnerSmallVec::Stack(ref elements) => {
@@ -327,6 +336,7 @@ where
         }
     }
 
+    /// Returns an iterator over the difference of the 2 sets.
     pub fn difference<'a>(&'a self, other: &'a Self) -> SmallDifference<'a, A::Item> {
         match &self.inner {
             InnerSmallVec::Stack(ref elements) => {
@@ -353,6 +363,7 @@ where
         }
     }
 
+    /// Returns an iterator over the symmetric difference of the 2 sets.
     pub fn symmetric_difference<'a>(
         &'a self,
         other: &'a Self,
@@ -393,6 +404,7 @@ where
     }
 }
 
+/// Iterator returned upon calling `drain`.
 pub struct SmallDrain<T> {
     data: Vec<T>,
     index: usize,
@@ -412,6 +424,7 @@ impl<T> Iterator for SmallDrain<T> {
     }
 }
 
+/// Iterator returned upon calling `intersection`.
 pub struct SmallIntersection<'a, T> {
     data: Vec<&'a T>,
     index: usize,
@@ -431,6 +444,7 @@ impl<'a, T> Iterator for SmallIntersection<'a, T> {
     }
 }
 
+/// Iterator returned upon calling `union`.
 pub struct SmallUnion<'a, T> {
     data: Vec<&'a T>,
     index: usize,
@@ -450,6 +464,7 @@ impl<'a, T> Iterator for SmallUnion<'a, T> {
     }
 }
 
+/// Iterator returned upon calling `difference`.
 pub struct SmallDifference<'a, T> {
     data: Vec<&'a T>,
     index: usize,
@@ -469,6 +484,7 @@ impl<'a, T> Iterator for SmallDifference<'a, T> {
     }
 }
 
+/// Iterator returned upon calling `symmteric_difference`.
 pub struct SmallSymmetricDifference<'a, T> {
     data: Vec<&'a T>,
     index: usize,
@@ -526,6 +542,8 @@ where
     }
 }
 
+/// Iterator of the set returned upon calling `iter`.
+/// This is required to be an abstraction over the enum.
 pub struct SmallIter<'a, A: Array>
 where
     A::Item: PartialEq + Eq + Hash + 'a,
