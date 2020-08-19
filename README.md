@@ -1,23 +1,18 @@
-`smallset`: a small unordered set
-=================================
+# SmolSet
 
-[![Build Status](https://travis-ci.org/cfallin/boolean_expression.svg?branch=master)](https://travis-ci.org/cfallin/rust-smallset)
-
-[crates.io](https://crates.io/crates/smallset/)
-
-[Documentation](https://cfallin.github.io/rust-smallset/smallset/)
+[![Crate](https://img.shields.io/crates/v/smolset.svg)](https://crates.io/crates/smolset)
 
 This crate implements a small unordered-set data structure implemented using
-[smallvec](https://crates.io/crates/smallvec/). It stores set elements in a
-simple unordered array, and when the set is smaller than a parameterizable
-size, the elements are stored completely inline (i.e., with zero heap
-allocations). The data structure is thus very space-efficient for sets of only
-a few elements, much more so than a tree-based or hash-table-based set data
-structure.  It is also fast when the set is small: queries and inserts perform
-a linear scan, which is more cache-friendly than a pointer-chasing search
-through a tree.
+[smallvec](https://crates.io/crates/smallvec/).
+It initially stores set elements in a simple unordered array.
+When the set is smaller than a parameterizable size, no allocations will be performed.
+The data structure is thus very space-efficient for sets of only a few elements, much more so than a tree-based or hash-table-based set data structure.
+It is also fast when the set is small: queries and inserts perform a linear scan, which is more cache-friendly than a pointer-chasing search through a tree.
 
-`smallset` should be used where minimizing heap allocations is of primary
-importance and where it is expected that no more than a few elements will be
-present. If the set grows large, then it will exhibit poor (`O(n)` queries and
-inserts) performance.
+However, as the set grows, it will transform internally into a `std::collections::HashSet`.
+
+
+## Note
+
+This is a fork of the original library here: [rust-smallset](https://github.com/cfallin/rust-smallset).
+I have rewritten the internals completely to not have such a bad fallback mode and added more features (and their tests and documentations).
