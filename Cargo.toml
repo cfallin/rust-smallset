@@ -8,4 +8,4 @@ documentation = "https://cfallin.github.io/rust-smallset/smallset/"
 license = "MIT"
 
 [dependencies]
-smallvec = "0.1"
+smallvec = "1.4.2"
